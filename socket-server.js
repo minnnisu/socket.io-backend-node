@@ -10,9 +10,16 @@ const io = require("socket.io")(http, {
 });
 
 io.on("connection", (socket) => {
-  socket.on("send message", (item) => {
-    console.log(`${item.name} : ${item.msg}`);
-    io.emit("receive message", { name: item.name, msg: item.msg }); //"receive message"라는 이벤트 발생
+  // send text message
+  socket.on("send message", (msg) => {
+    console.log(`text message : (${msg.name}) ${msg.msg}`);
+    io.emit("receive message", { name: msg.name, msg: msg.msg });
+  });
+
+  // send encrypted base64 file
+  socket.on("sendBase64", (data) => {
+    console.log(`base64 data : (${data.name}) ${data.base64Data}`);
+    io.emit("receciveBase64", { name: data.name, base64Data: data.base64Data });
   });
 
   socket.on("disconnect", function () {
