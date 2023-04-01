@@ -17,28 +17,19 @@ io.on("connection", (socket) => {
     io.emit("receive message", { name: msg.name, msg: msg.msg });
   });
 
-  // // send encrypted base64 file
-  // socket.on("sendBase64", (data) => {
-  //   console.log(`base64 data : (${data.name}) ${data.base64Data}`);
-  //   io.emit("receciveBase64", { name: data.name, base64Data: data.base64Data });
-  // });
-
-  socket.on("sendImageInit", (data) => {
-    const parsedData = JSON.parse(data);
-    console.log(`sendImageInit: ${data}`);
-    io.emit("receiveImageData", data);
+  socket.on("sendImageInit", (header, data) => {
+    console.log(`sendImageInit: ${{ ...header }}`);
+    io.emit("receiveImageData", header, data);
   });
 
-  socket.on("sendImageData", (data) => {
-    const parsedData = JSON.parse(data);
-    console.log(`sendImageData: ${data}`);
-    io.to(parsedData.recieverSocketID).emit("receiveImageData", data);
+  socket.on("sendImageData", (header, data) => {
+    console.log(`sendImageData`);
+    io.to(header.recieverSocketID).emit("receiveImageData", header, data);
   });
 
-  socket.on("moreData", (data) => {
-    const parsedData = JSON.parse(data);
-    console.log(`moreData: ${data}`);
-    io.to(parsedData.recieverSocketID).emit("requestMoreImageData", data);
+  socket.on("moreData", (header) => {
+    console.log(`moreData: ${{ ...header }}`);
+    io.to(header.recieverSocketID).emit("requestMoreImageData", header);
   });
 
   socket.on("disconnect", function () {
