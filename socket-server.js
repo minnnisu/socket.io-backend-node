@@ -1,4 +1,7 @@
 const express = require("express");
+var ss = require("socket.io-stream");
+var fs = require("fs");
+const { Transform, Writable, Readable, Duplex } = require("stream");
 
 const app = express();
 const port = 3001;
@@ -8,6 +11,7 @@ const io = require("socket.io")(http, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+  // maxHttpBufferSize: 1e8,
 });
 
 io.on("connection", (socket) => {
@@ -17,19 +21,16 @@ io.on("connection", (socket) => {
     io.emit("receive message", { name: msg.name, msg: msg.msg });
   });
 
-  socket.on("sendImageInit", (header, data) => {
-    console.log(`sendImageInit: ${{ ...header }}`);
-    io.emit("receiveImageData", header, data);
-  });
+  // socket.on("send", (data) => {
+  //   console.log(data);
+  //   io.emit("receive", data);
+  // });
 
-  socket.on("sendImageData", (header, data) => {
-    console.log(`sendImageData`);
-    io.to(header.recieverSocketID).emit("receiveImageData", header, data);
-  });
-
-  socket.on("moreData", (header) => {
-    console.log(`moreData: ${{ ...header }}`);
-    io.to(header.recieverSocketID).emit("requestMoreImageData", header);
+  ss(socket).on("file", function (stream, size) {
+    const tempStream = ss.createStream();
+    console.log(stream);
+    stream.pipe(tempStream);
+    ss(socket).emit("receive", tempStream, size);
   });
 
   socket.on("disconnect", function () {
