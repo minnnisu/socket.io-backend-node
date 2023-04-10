@@ -21,16 +21,10 @@ io.on("connection", (socket) => {
     io.emit("receive message", { name: msg.name, msg: msg.msg });
   });
 
-  // socket.on("send", (data) => {
-  //   console.log(data);
-  //   io.emit("receive", data);
-  // });
-
   ss(socket).on("file", function (stream, size) {
-    const tempStream = ss.createStream();
-    console.log(stream);
-    stream.pipe(tempStream);
-    ss(socket).emit("receive", tempStream, size);
+    const newStream = ss.createStream();
+    ss(socket).emit("receive", newStream, size);
+    stream.pipe(newStream);
   });
 
   socket.on("disconnect", function () {
