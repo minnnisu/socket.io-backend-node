@@ -1,12 +1,10 @@
 const express = require("express");
-var ss = require("socket.io-stream");
-var fs = require("fs");
-const { Transform, Writable, Readable, Duplex } = require("stream");
+const ss = require("socket.io-stream");
 
 const app = express();
-const consumerSockets = [];
 const port = 3001;
-var http = require("http").createServer(app);
+const http = require("http").createServer(app);
+
 const io = require("socket.io")(http, {
   cors: {
     origin: "*",
@@ -16,29 +14,19 @@ const io = require("socket.io")(http, {
 });
 
 io.on("connection", (socket) => {
-  consumerSockets.push(socket);
-  console.log("  consumerSockets.length: ", consumerSockets.length);
-
   // send text message
   socket.on("sendMsg", (msg) => {
     console.log(`text message : (${msg.name}) ${msg.msg}`);
     io.emit("receiveMsg", { name: msg.name, msg: msg.msg });
   });
 
-  // ss(socket).on("sendImg", function (stream, size) {
-  //   const newStream = ss.createStream();
-  //   ss(socket).emit("receiveImg", newStream, size);
-  //   stream.pipe(newStream);
-  // });
-
   // receive the image
-  ss(socket).on("sendImg", function (incomingStream, data) {
-    console.log("on image ", data);
-
-    for (var i in consumerSockets) {
-      var consumerSocket = consumerSockets[i];
-      var outgoingStream = ss.createStream();
-      ss(consumerSocket).emit("receiveImg", outgoingStream, data);
+  ss(socket).on("sendImg", async function (incomingStream, data) {
+    const sockets = await io.of("/").fetchSockets(); // return all Socket instances
+    for (const _socket of sockets) {
+      console.log(_socket.id);
+      const outgoingStream = ss.createStream();
+      ss(_socket).emit("receiveImg", outgoingStream, data);
       incomingStream.pipe(outgoingStream);
     }
   });
